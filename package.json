@@ -1,0 +1,41 @@
+{
+  "name": "account-risk-skill",
+  "version": "0.1.0",
+  "description": "反封号：Claude Code account suspension risk assessment, IP cleanliness scoring, compliance preflight, and appeal packet skill.",
+  "main": "SKILL.md",
+  "scripts": {
+    "score:clean": "python3 scripts/ip_cleanliness_score.py --ip2location examples/ip2location-clean.json --ipinfo examples/ipinfo-clean.json",
+    "score:risky": "python3 scripts/ip_cleanliness_score.py --ip2location examples/ip2location-risky.json --ipinfo examples/ipinfo-risky.json",
+    "risk:clean": "python3 scripts/account_risk_score.py examples/account-risk-clean.json",
+    "risk:high": "python3 scripts/account_risk_score.py examples/account-risk-high.json",
+    "probe:api": "bash scripts/domain_route_probe.sh",
+    "probe:egress": "bash scripts/egress_consensus_probe.sh",
+    "test": "python3 scripts/ip_cleanliness_score.py --ip2location examples/ip2location-clean.json --ipinfo examples/ipinfo-clean.json --json >/dev/null && python3 scripts/ip_cleanliness_score.py --ip2location examples/ip2location-risky.json --ipinfo examples/ipinfo-risky.json --json >/dev/null && python3 scripts/account_risk_score.py examples/account-risk-clean.json --json >/dev/null && python3 scripts/account_risk_score.py examples/account-risk-high.json --json >/dev/null && bash scripts/domain_route_probe.sh api.anthropic.com >/dev/null"
+  },
+  "keywords": [
+    "claude-code",
+    "anthropic",
+    "account-risk",
+    "suspension",
+    "appeal",
+    "ip-reputation",
+    "ip2location",
+    "ipinfo",
+    "skill",
+    "反封号",
+    "封号检测",
+    "账号风控",
+    "ip纯净度",
+    "claude-code-only"
+  ],
+  "author": "voidborne-d",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/swaylq/account-risk-skill.git"
+  },
+  "bugs": {
+    "url": "https://github.com/swaylq/account-risk-skill/issues"
+  },
+  "homepage": "https://github.com/swaylq/account-risk-skill#readme"
+}

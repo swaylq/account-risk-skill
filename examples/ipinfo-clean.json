@@ -1,0 +1,21 @@
+{
+  "ip": "203.0.113.10",
+  "hostname": "example-dsl-203-0-113-10.example-isp.net",
+  "city": "San Francisco",
+  "region": "California",
+  "country": "US",
+  "asn": {
+    "asn": "AS0000",
+    "name": "Example Fixed Line ISP",
+    "domain": "example-isp.net",
+    "type": "isp"
+  },
+  "privacy": {
+    "vpn": false,
+    "proxy": false,
+    "tor": false,
+    "relay": false,
+    "hosting": false,
+    "anonymous": false
+  }
+}

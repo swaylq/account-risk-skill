@@ -1,0 +1,25 @@
+{
+  "ip": "198.51.100.20",
+  "country_code": "US",
+  "region_name": "Virginia",
+  "city_name": "Ashburn",
+  "usage_type": "DCH",
+  "net_speed": "T1",
+  "as_info": {
+    "asn": "AS0001",
+    "as": "Example Cloud Hosting LLC",
+    "as_usage_type": "DCH"
+  },
+  "proxy": {
+    "is_proxy": true,
+    "proxy_type": "DCH",
+    "is_data_center": true,
+    "is_vpn": false,
+    "is_tor": false,
+    "is_residential_proxy": false,
+    "is_consumer_privacy_network": false,
+    "is_spammer": false
+  },
+  "fraud_score": 82,
+  "threat": "SCANNER"
+}

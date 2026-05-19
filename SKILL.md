@@ -1,274 +1,194 @@
 ---
-name: account-ban-risk
-description: Use this skill when assessing Claude Code / Anthropic / OpenAI account suspension risk, false-positive ban risk, region eligibility, IP/network reputation, or anti-ban compliance hardening. The skill must not help evade bans, bypass unsupported-region restrictions, disguise identity/location, rotate accounts, or defeat platform risk controls; it only provides legitimate risk detection, compliance preflight, and appeal preparation.
-metadata:
-  short-description: 反封号：账号封禁风险检测与合规预检
+name: claude-code-account-risk
+description: |
+  反封号.skill — Claude Code 专用账号风险体检。用户说「测试一下我目前账号被封的可能性」「检查 Claude Code 封号风险」「账号被封帮我申诉」「检查 api.anthropic.com 路由」「反封号」时触发。自动综合评估 IP/网络出口、Claude API 路由、项目自动化、敏感数据、地区主体待确认项、审计控制，并输出风险分、风险等级和整改建议。禁止提供绕封号、绕地区、伪装身份/位置、代理池、IP 轮换、批量换号等规避风控方案。
+allowed-tools: Read, Write, Edit, Bash, WebSearch, WebFetch
 ---
 
-# 反封号：账号封禁风险检测与合规预检
+# 反封号 · Claude Code 账号风险体检
 
-## Boundary
+## 目标
 
-This skill is for legitimate risk detection and false-positive reduction.
+用户触发后，直接做一次 Claude Code 封号风险评估。不要向用户暴露内部评分细节，除非用户追问。
 
-Allowed:
-- Assess account suspension risk.
-- Check official supported-region and usage-policy constraints.
-- Evaluate IP/network reputation for compliance and stability.
-- Explain likely false-positive triggers.
-- Build preflight checks, status reports, and appeal packets.
-- Recommend safer, compliant operating practices.
+典型触发：
 
-Disallowed:
-- Do not provide ban evasion instructions.
-- Do not help bypass unsupported-region restrictions.
-- Do not recommend VPN/proxy procurement or IP rotation to disguise location.
-- Do not help create/manage multiple accounts to circumvent limits or detection.
-- Do not provide stealth tactics for platform abuse, scraping, spam, fake engagement, or automated account creation.
-- If the user asks for evasion, redirect to compliance, risk detection, or appeal preparation.
+- 测试一下我目前账号被封的可能性
+- 检查 Claude Code 封号风险
+- 用反封号 skill 检查这个项目
+- 我 Claude 账号被封了，帮我整理申诉
+- 看一下 api.anthropic.com 走什么出口
 
-## When To Browse
+## 边界
 
-Browse current official sources when the user asks for latest policy, current region availability, appeal process, identity verification, or product terms.
+可以：
+- 风险检测
+- 合规预检
+- IP / 路由 / 分流检查
+- 项目自动化风险检查
+- 敏感数据暴露风险检查
+- 审计控制检查
+- 误封申诉材料整理
 
-Prefer official sources:
-- Anthropic supported countries: https://www.anthropic.com/supported-countries
-- Anthropic API supported regions: https://docs.anthropic.com/en/api/supported-regions
-- Anthropic usage policy: https://www.anthropic.com/legal/aup
-- Anthropic safeguards warnings and appeals: https://support.claude.com/en/articles/8241253-trust-and-safety-warnings-and-appeals
-- Anthropic identity verification: https://support.claude.com/en/articles/14328960-identity-verification-on-claude
-- Claude Code data usage: https://docs.anthropic.com/en/docs/claude-code/data-usage
-- Claude Code monitoring: https://docs.anthropic.com/en/docs/claude-code/monitoring-usage
-- OpenAI supported countries: https://help.openai.com/en/articles/5347006-which-countries-and-territories-are-supported-by-openai
-- ChatGPT supported countries: https://help.openai.com/en/articles/7947663-chatgpt-supported-countries
-- IP2Location usage type: https://blog.ip2location.com/knowledge-base/what-is-usage-type
-- IP2Location.io docs: https://www.ip2location.io/ip2location-documentation
-- IP2Proxy docs: https://www.ip2location.com/web-service/ip2proxy
-- IPinfo privacy detection: https://ipinfo.io/developers/privacy-detection-extended
-- IPinfo ASN database: https://ipinfo.io/developers/asn-database
+禁止：
+- 绕封号
+- 绕 unsupported region
+- 伪装身份 / 伪装位置
+- 批量换号
+- 代理池 / IP 轮换策略
+- 平台风控规避
+- 批量注册、刷量、垃圾消息、平台操纵
 
-## Known Baseline
+如果用户要求规避风控，拒绝并转向「风险检测 / 合规整改 / 申诉材料」。
 
-Public Claude Code source-leak reporting showed DMCA takedown enforcement on GitHub repositories, not a confirmed Claude user-account ban mechanism.
+## 一次评估怎么做
 
-Summarize accurately:
-- Claude Code npm/source-map leak exposed internal source references.
-- Copies/forks appeared on GitHub.
-- Anthropic sent DMCA takedown requests.
-- GitHub takedown scope reportedly overreached and hit many unrelated forks.
-- Anthropic later acknowledged the takedown was too broad and narrowed it.
+按顺序执行。
 
-Do not claim leaked source revealed a reliable account-ban mechanism unless verified from public sources.
+### 1. 读取项目
 
-## Official Ban Risk Categories
+优先读取存在的文件：
 
-Anthropic account risk commonly includes:
-- Repeated Usage Policy violations.
-- Terms of Service violations.
-- Account creation or access from unsupported regions.
-- Identity verification failure or underage verification.
-- Platform integrity or fraud checks.
-- API-account-level violation thresholds, not only single-request violations.
+- `AGENTS.md`
+- `CLAUDE.md`
+- `.claude/settings.json`
+- `.claude/settings.local.json`（只判断 key 名，不输出 secret 值）
+- `scripts/`
+- `cron/`
+- `launchd/`
+- `systemd/`
+- `memory/` 最近日志
+- `README.md`
+- `package.json`
 
-OpenAI risk commonly includes:
-- Access from unsupported countries/territories.
-- Violating usage policies or terms.
-- Suspicious account, payment, location, or automation patterns.
+不要打印 token、API key、bot token、cookie、private key。
 
-For China mainland:
-- Treat mainland China as unsupported for Anthropic and OpenAI unless official lists change.
-- Stable IP does not override unsupported-region policy.
-- Do not advise users to mask location or use proxy routes to bypass restrictions.
-- Suggest compliant alternatives: supported-region legal entity, official enterprise channel, or local models/providers.
+### 2. 检查网络
 
-## Claude Code Specific Signals
+在本 skill 目录可运行：
 
-Relevant public data/telemetry facts:
-- Claude Code sends user prompts and model outputs to Anthropic API.
-- Claude Code may collect operational metrics such as latency, reliability, and usage patterns.
-- Sentry may be used for operational error logging.
-- The `/bug` command may send full conversation history, including code.
-- Data retention differs by account type and privacy setting.
-- Team/Enterprise/API terms may differ from consumer settings.
+```bash
+bash scripts/egress_consensus_probe.sh
+bash scripts/domain_route_probe.sh
+```
 
-Risk implications:
-- Do not send leaked proprietary code, DMCA-risk mirrors, credentials, or suspicious policy-stress prompts through production accounts.
-- Avoid autonomous workflows that perform bulk external actions.
-- Keep audit logs of prompts, actions, tool calls, and user approvals.
+重点看：
 
-## IP Cleanliness Assessment
+- 是否 `split_egress=true`
+- `api.anthropic.com` 的 DNS / route / Cloudflare colo 是否稳定
+- 是否能确认 Claude API 路径对应的 egress/source IP
 
-Use IP reputation only for compliance and false-positive detection. Do not use it to bypass unsupported-region restrictions.
+注意：
 
-Use multiple sources:
-1. IP2Location / IP2Proxy
-2. IPinfo
-3. RDAP / WHOIS / reverse DNS
-4. Historical snapshots
+- `remote_ip` 是 Claude API 目标 IP，不是公网出口 IP。
+- 如果不能确认真实 source IP，标为「需要用户确认」。
 
-### Hard Reject
+### 3. IP 纯净度
 
-Reject or mark high risk if any are true:
-- IP2Location usage_type is DCH, CDN, SES, or RSV.
-- IP2Location as_info.as_usage_type is DCH, CDN, SES, or RSV.
-- IP2Proxy says is_proxy=true.
-- IP2Proxy proxy_type is VPN, TOR, PUB, WEB, DCH, RES, CPN, or EPN.
-- IP2Proxy says is_data_center, is_vpn, is_tor, is_residential_proxy, is_consumer_privacy_network, or is_spammer.
-- IPinfo privacy flags show hosting, vpn, proxy, tor, relay, or anonymous.
-- IPinfo ASN type is hosting.
-- Threat fields show BOTNET, SPAM, or SCANNER.
-- Fraud score is high.
-- Region/country conflicts with the user's legitimate account, payment, phone, or legal entity context.
+如果用户提供 IP2Location / IPinfo JSON，运行：
 
-### Strong Pass
+```bash
+python3 scripts/ip_cleanliness_score.py --ip2location <file> --ipinfo <file>
+```
 
-A low-risk IP usually has:
-- IP2Location usage_type = ISP or MOB.
-- IP2Location as_info.as_usage_type = ISP or MOB.
-- net_speed = DSL preferred.
-- IP2Proxy proxy=false.
-- IPinfo privacy flags all false.
-- IPinfo ASN type = isp or legitimate mobile/carrier type.
-- ASN owner is a mainstream fixed-line or mobile operator, not cloud, VPS, hosting, proxy, CDN, transit, scraping, or security infrastructure.
-- Hostname/reverse DNS looks consistent with fixed-line/mobile network allocation.
-- Stable ASN/geolocation/reputation over time.
+如果没有提供，只基于 route / egress probe 做初步判断，不编造 IP2Location 结论。
 
-### Scoring
+### 4. Claude Code 项目风险
 
-Start at 100.
+检查这些风险：
 
-Immediate reject:
-- usage_type DCH/CDN/SES/RSV: score 0
-- as_usage_type DCH/CDN/SES/RSV: score 0
-- IP2Proxy proxy true: score 0
-- IPinfo hosting/vpn/proxy/tor/relay true: score 0
-- BOTNET threat: score 0
-- fraud_score >= 70: score 0
+- 长期 agent / daemon / cron / bridge
+- 批量注册
+- 批量消息
+- 爬取
+- 平台操纵
+- credential stuffing
+- 越权安全测试
+- policy stress testing / jailbreak testing
+- 外部动作没有人工确认
+- 没有审计日志
+- 没有 policy gate / allowlist / stop condition
+- `.env` / token / API key / 敏感日志进入上下文
+- 泄漏源码 / DMCA-risk mirror
+- `/bug` 或 debug dump 可能上传完整上下文
 
-Deduct:
-- usage_type not ISP/MOB: -35
-- as_usage_type not ISP/MOB: -35
-- net_speed not DSL or unknown: -15
-- IPinfo ASN type not isp/carrier: -30
-- hostname missing: -10
-- hostname/rDNS looks hosting-like: -30
-- ASN owner not a mainstream ISP/mobile carrier: -30
-- geo/account mismatch: -40
-- reputation/geolocation changes frequently over 30 days: -25
-- same exit IP shared by many unrelated accounts: -40
-- vendor price suspiciously low for dedicated residential service: -20, auxiliary only
+### 5. 用户确认项
 
-Add:
-- usage_type ISP/MOB: +15
-- as_usage_type ISP/MOB: +15
-- net_speed DSL: +10
-- IPinfo ASN type isp/carrier: +15
-- IPinfo privacy all false: +20
-- IP2Proxy all proxy flags false: +20
-- mainstream fixed-line/mobile ASN owner: +15
-- stable 30-day history: +10
+这些不能从本地可靠判断，列到「需要用户确认」：
 
-Decision:
-- 90-100 clean
-- 75-89 acceptable
-- 60-74 watch
-- 40-59 risky
-- 0-39 reject
+- 账号地区
+- 支付地区
+- 手机号 / 身份验证
+- 组织主体
+- 是否真实位于 Anthropic supported country
+- Anthropic warning / suspension 邮件内容
+- Anthropic 服务端看到的真实 source IP
+- Team / Enterprise / API 合同条款
 
-Always return reasons, not only score.
+涉及最新 supported countries / policy / appeal 流程时，浏览官方来源核实。
 
-## Account Risk Assessment Workflow
+官方优先来源：
 
-1. Clarify scope:
-   - Claude Code, Claude web, Anthropic API, ChatGPT, Codex CLI, or OpenAI API?
-   - Personal, Team, Enterprise, or API account?
-   - Region, billing entity, and intended workload?
-   - Is this for false-positive prevention, status reporting, or appeal?
+- https://www.anthropic.com/supported-countries
+- https://docs.anthropic.com/en/api/supported-regions
+- https://www.anthropic.com/legal/aup
+- https://support.claude.com/en/articles/8241253-trust-and-safety-warnings-and-appeals
+- https://support.claude.com/en/articles/14328960-identity-verification-on-claude
+- https://docs.anthropic.com/en/docs/claude-code/data-usage
+- https://docs.anthropic.com/en/docs/claude-code/monitoring-usage
 
-2. Check official eligibility:
-   - Supported country/region.
-   - Terms and usage policy.
-   - Identity verification requirements.
-   - Commercial/entity restrictions.
+## 评分
 
-3. Check workload risk:
-   High-risk patterns include:
-   - Jailbreak/policy stress testing on production accounts.
-   - Security abuse, credential attacks, malware, spam, scraping, fake engagement.
-   - Bulk registration or multi-account management.
-   - Autonomous third-party platform actions.
-   - Feeding leaked source code or DMCA-risk content.
-   - Excessive resume/agent loops without human intent.
-   - Inconsistent identity, billing, region, or device signals.
+总分叫 `risk_score`，0-100，越高越危险。
 
-4. Check network risk:
-   - Run IP cleanliness assessment.
-   - Confirm stable, legitimate, non-proxy network.
-   - Reject unsupported-region bypass framing.
+权重：
 
-5. Check automation hygiene:
-   - Human approval for external actions.
-   - Prompt/action audit logs.
-   - Rate limits and cooldowns.
-   - Local policy gate for banned categories.
-   - Explicit stop conditions.
-   - Status reporting for auth/region/rate-limit errors.
+- IP / network: 70%
+- region / identity: 10%
+- workflow: 10%
+- sensitive data: 5%
+- audit controls: 5%
 
-6. Output:
-   - Overall risk: low / medium / high / reject.
-   - Top reasons.
-   - What to stop immediately.
-   - What to change safely.
-   - Appeal prep if already suspended.
+判定：
 
-## Appeal Packet
+- 85-100: critical
+- 70-84: high
+- 45-69: watch
+- 25-44: low
+- 0-24: minimal
 
-If the user is already banned/suspended, help prepare a factual appeal.
+硬性覆盖：
 
-Collect:
-- Account email or org ID, without exposing secrets.
-- Product: Claude Code / Claude web / Anthropic API / ChatGPT / Codex CLI / OpenAI API.
-- Plan type.
-- Suspension time and timezone.
-- Last known legitimate actions.
-- Business purpose.
-- Whether multiple users or only one account affected.
-- Whether billing/payment is current.
-- Whether region/entity is officially supported.
-- Any warning emails.
-- What corrective action was taken.
-- Relevant logs with secrets redacted.
+- unsupported region: 总风险至少 75
+- 明显高风险 workflow: 总风险至少 90
+- secrets in context: 总风险至少 85
+- hosting/proxy 明确命中: 网络风险至少 95
 
-Do not fabricate facts. Do not suggest hiding region, identity, or prior activity.
+可以用结构化 profile 运行：
 
-## Output Template
+```bash
+python3 scripts/account_risk_score.py <profile.json>
+```
 
-Use this format:
+没有完整 profile 时，手动按上述权重估算，标明哪些依据来自本地验证，哪些来自用户确认。
+
+## 输出格式
+
+默认用简洁中文。不要长篇解释内部规则。
 
 ```text
-反封号风险评估
+Claude Code 封号风险体检
 
-对象：
-账号/产品：
-地区/主体：
-用途：
-
-结论：
 风险等级：
-是否建议继续使用：
+总风险分：
 
-主要风险：
-1.
-2.
-3.
-
-IP 纯净度：
-score:
-decision:
-reasons:
+已验证：
 -
 
-账号/策略风险：
+需要你确认：
+-
+
+高风险：
 -
 
 建议动作：
@@ -276,22 +196,37 @@ reasons:
 2.
 3.
 
-不能做：
--
-
-申诉材料：
+如果已封号，申诉材料还缺：
 -
 ```
 
-## Refusal Template
+## 申诉材料
 
-If the user asks for evasion:
+如果用户已经被封，收集：
+
+- 账号 email / org ID（不要输出 secret）
+- 产品：Claude Code / Claude / Anthropic API
+- plan 类型
+- 封禁时间和时区
+- warning 邮件原文或摘要
+- 最后几次合法活动
+- 业务用途
+- 是否单账号或团队整体受影响
+- billing 是否正常
+- 地区和主体是否 supported
+- 已停止的风险工作流
+- 已整改动作
+- 脱敏日志
+
+不要编造事实。不要建议隐藏地区、身份或历史活动。
+
+## 拒绝模板
 
 ```text
 我不能帮助绕过封禁、规避地区限制、伪装身份/位置、批量换号或逃避平台风控。
 
 我可以继续帮你做三件事：
-1. 评估当前账号/网络/工作流的封禁风险。
+1. 评估当前 Claude Code 账号/网络/工作流的封禁风险。
 2. 建立合规预检和状态报告。
 3. 整理误封申诉材料。
 ```

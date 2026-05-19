@@ -1,0 +1,21 @@
+{
+  "ip": "198.51.100.20",
+  "hostname": "vps-198-51-100-20.example-cloud.net",
+  "city": "Ashburn",
+  "region": "Virginia",
+  "country": "US",
+  "asn": {
+    "asn": "AS0001",
+    "name": "Example Cloud Hosting LLC",
+    "domain": "example-cloud.net",
+    "type": "hosting"
+  },
+  "privacy": {
+    "vpn": false,
+    "proxy": true,
+    "tor": false,
+    "relay": false,
+    "hosting": true,
+    "anonymous": true
+  }
+}

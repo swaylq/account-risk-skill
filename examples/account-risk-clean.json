@@ -1,0 +1,35 @@
+{
+  "ip_network": {
+    "cleanliness_score": 92,
+    "split_egress": false,
+    "api_route_unverified": false,
+    "hosting_or_proxy_detected": false
+  },
+  "region_identity": {
+    "unsupported_region": false,
+    "unknown_region": false,
+    "billing_mismatch": false,
+    "phone_or_timezone_mismatch": false
+  },
+  "workflow": {
+    "long_running_agent": true,
+    "third_party_actions_without_approval": false,
+    "bulk_registration": false,
+    "bulk_messaging": false,
+    "platform_manipulation": false,
+    "credential_attacks": false,
+    "malware_or_abuse": false,
+    "policy_stress_testing": false,
+    "unauthorized_security_testing": false
+  },
+  "sensitive_data": {
+    "secrets_in_context": false,
+    "dmca_or_leaked_source": false,
+    "bug_report_full_context": false
+  },
+  "audit_controls": {
+    "has_audit_log": true,
+    "has_policy_gate": true,
+    "has_human_approval_for_external_actions": true
+  }
+}

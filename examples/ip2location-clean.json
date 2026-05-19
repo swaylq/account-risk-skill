@@ -1,0 +1,25 @@
+{
+  "ip": "203.0.113.10",
+  "country_code": "US",
+  "region_name": "California",
+  "city_name": "San Francisco",
+  "usage_type": "ISP",
+  "net_speed": "DSL",
+  "as_info": {
+    "asn": "AS0000",
+    "as": "Example Fixed Line ISP",
+    "as_usage_type": "ISP"
+  },
+  "proxy": {
+    "is_proxy": false,
+    "proxy_type": "",
+    "is_data_center": false,
+    "is_vpn": false,
+    "is_tor": false,
+    "is_residential_proxy": false,
+    "is_consumer_privacy_network": false,
+    "is_spammer": false
+  },
+  "fraud_score": 5,
+  "threat": ""
+}
